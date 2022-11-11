@@ -1,0 +1,22 @@
+[
+  {
+    "name": "iphone 1 22",
+    "description": "description1 adsa asd",
+    "price": 10000,
+    "category": "laptop",
+    "stock": 20,
+    "image": {
+      "public_id": "image",
+      "url": "image"
+    }
+  },
+  {
+    "_id": "5c8a1dfa2f8fb814b56fa181",
+    "name": "Lourdes Browning",
+    "email": "loulou@example.com",
+    "role": "user",
+    "active": true,
+    "photo": "user-2.jpg",
+    "password": "$2a$12$hP1h2pnNp7wgyZNRwPsOTeZuNzWBv7vHmsR3DT/OaPSUBQT.y0S.."
+  }
+]
