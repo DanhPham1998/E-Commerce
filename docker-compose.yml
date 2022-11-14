@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+    node:
+        container_name: node_server
+        build:
+            context: .
+            dockerfile: ./src/Dockerfile
+        ports:
+            - 2000:2000
+        volumes:
+            - .:/app
+        command: npm run dev
+        environment:
+            PORT: 4000
+            MONGO_URI: mongodb+srv://danhpham1998:Danh1998@cluster0.gaqrlfq.mongodb.net/e-commerce?retryWrites=true&w=majority
+            MONGO_URI_TEST: mongodb+srv://danhpham1998:Danh1998@cluster0.gaqrlfq.mongodb.net/e-commerce-test?retryWrites=true&w=majority
+            NODE_ENV: development
+            JWT_SECRET: daylakeyjwt
+            JWT_EXPIRE: 30d
+            JWT_COOKIE_EXPIRE: 30
+            EMAIL_FROM: kiucvebe1@gmail.com
+            SENDFRID_PASSWORD: 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
+networks:
+    common:

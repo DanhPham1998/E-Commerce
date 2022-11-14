@@ -3,9 +3,8 @@ const crypto = require('crypto');
 const User = require('./../models/userModel');
 const ErrorResponse = require('./../utils/errorResponse');
 const catchAsync = require('../middlewares/catchAsync');
-const ApiFeatures = require('./../utils/apiFeatures');
 const Email = require('./../utils/email');
-const { filterObj } = require('./../middlewares/uploadImage');
+const { sendTokenResponse } = require('./../utils/sendTokenResponse');
 
 // @desc      Register User
 // @route     POST /api/v1/auth/register
@@ -67,70 +66,6 @@ exports.logout = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {},
   });
-});
-
-// @desc      Get Me
-// @route     GET /api/v1/auth/me
-// @access    Private
-exports.getMe = catchAsync(async (req, res, next) => {
-  const user = req.user;
-  res.status(200).json({
-    status: 'success',
-    data: user,
-  });
-});
-
-// @desc      Get Me
-// @route     GET /api/v1/auth/me
-// @access    Private
-exports.updateMe = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.user.id).select('+password');
-
-  //Check password trong DB vs currenpassword
-  if (!(await user.checkPassword(req.body.currentPassword || 'None'))) {
-    return next(new ErrorResponse('Curent password is not correct', 401));
-  }
-
-  // lọc dữ liệu req.body gửi lên tránh gửi role, password...
-  const fileterBody = filterObj(req.body, 'email', 'name');
-
-  // Thêm photo nếu có
-  if (req.file) fileterBody.avatar = req.file.filename;
-
-  const updateUser = await User.findByIdAndUpdate(req.user.id, fileterBody, {
-    new: true,
-    runValidators: true,
-  });
-  res.status(201).json({
-    status: 'success',
-    data: updateUser,
-  });
-});
-
-// @desc      Update Password User
-// @route     PUT /api/v1/auth/updatepassword
-// @access    Private
-exports.updatePassword = catchAsync(async (req, res, next) => {
-  const { currentPassword, password, passwordConfirm } = req.body;
-
-  if (!currentPassword || !password || !passwordConfirm) {
-    return next(
-      new ErrorResponse('CurrentPassword, password, passwordConfirm null', 401)
-    );
-  }
-
-  const user = await User.findById(req.user.id).select('+password');
-
-  //Check password trong DB vs currenpassword
-  if (!(await user.checkPassword(currentPassword))) {
-    return next(new ErrorResponse('Curent password is not correct', 401));
-  }
-
-  user.password = password;
-  user.passwordConfirm = passwordConfirm;
-  await user.save();
-
-  sendTokenResponse(user, 201, res);
 });
 
 // @desc      Forgot Password User
@@ -206,27 +141,3 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // Create Token
   sendTokenResponse(user, 200, res);
 });
-
-// Tạo Jsonweb Token và res token và thêm cookie vào
-function sendTokenResponse(user, statusCode, res) {
-  // Create JsonWebToken
-  const token = user.createJwT();
-
-  // Cookie Option
-  const options = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true,
-  };
-
-  if (process.env.NODE_ENV === 'production') {
-    options.secure = true;
-  }
-
-  // Response accessToken, cookie
-  res
-    .status(statusCode)
-    .cookie('token', token, options)
-    .json({ status: 'success', token });
-}

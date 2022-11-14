@@ -6,18 +6,27 @@ class ApiFeatures {
   }
 
   search() {
+    let keywordSearch =
+      typeof this.queryString.keyword === 'object'
+        ? Object.values(this.queryString.keyword)[0]
+        : this.queryString.keyword;
+
+    let fieldSearch = this.queryString?.keyword
+      ? Object.keys(this.queryString.keyword)[0]
+      : 'name';
+
     // Options "i" để không phân biệt hoa thường keyword đưa vào
-    const keyword = this.queryString.keyword
+    const search = this.queryString.keyword
       ? {
-          name: {
-            $regex: this.queryString.keyword,
+          [fieldSearch]: {
+            $regex: keywordSearch,
             $options: 'i',
           },
         }
       : {};
 
-    console.log(keyword);
-    this.query = this.query.find({ ...keyword });
+    //console.log(keyword);
+    this.query = this.query.find({ ...search });
     return this;
   }
 

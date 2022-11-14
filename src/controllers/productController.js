@@ -21,6 +21,7 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 // @route     GET /api/v1/products
 // @access    Public
 exports.getAllProduct = catchAsync(async (req, res, next) => {
+  console.log(req.query);
   const features = new ApiFeatures(Product.find(), req.query)
     .search()
     .filter()
@@ -30,7 +31,7 @@ exports.getAllProduct = catchAsync(async (req, res, next) => {
 
   const product = await features.query;
 
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     result: product.length,
     data: product,
@@ -73,7 +74,7 @@ exports.getProduct = catchAsync(async (req, res, next) => {
 // @route     PUT /api/v1/products/:id
 // @access    Private--Admin
 exports.updateProduct = catchAsync(async (req, res, next) => {
-  const product = await Product.findById(req.params.id);
+  let product = await Product.findById(req.params.id);
 
   if (!product) {
     return next(

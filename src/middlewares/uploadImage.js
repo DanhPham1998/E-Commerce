@@ -6,7 +6,7 @@ const sharp = require('sharp');
 
 const multrStorage = multer.memoryStorage();
 
-// Filer file
+// @desc      Filter file upload
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
@@ -18,40 +18,13 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
-// Khởi tạo multer
+// @desc      Khởi tạo multer
 const upload = multer({
   storage: multrStorage,
   fileFilter: multerFilter,
 });
 
-// @desc      Upload Bootcamp Photo
-// @route     PUT /api/v1/bootcamps/:id
-// @access    Private
-exports.uploadPhoto = upload.single('avatar');
-
-// @desc      Resize Bootcamp Photo
-// @route     PUT /api/v1/bootcamps/:id
-// @access    Private
-exports.settingsPhoto = (FirstNamePhoto, StroageLocation) =>
-  catchAsync(async (req, res, next) => {
-    if (!req.file) return next();
-
-    let iduser = req.user.id;
-    if (req.params.id) iduser = req.params.id;
-
-    req.file.filename = `${FirstNamePhoto}-${iduser}-${Date.now()}.jpeg`;
-
-    // Resize ảnh và dung lương ảnh
-    // Dùng await vì sharp trả ra 1 promise nên có thể chậm
-    await sharp(req.file.buffer)
-      .resize(500, 500)
-      .toFormat('jpeg')
-      .jpeg({ quality: 90 })
-      .toFile(`src/public/img/${StroageLocation}/${req.file.filename}`);
-    next();
-  });
-
-// xoá các key-value không có trong alowedFields, trả ra 1 Obj mới
+// @desc      Xoá các key-value không có trong alowedFields, trả ra 1 Obj mới
 exports.filterObj = (obj, ...alowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach((item) => {
@@ -61,3 +34,72 @@ exports.filterObj = (obj, ...alowedFields) => {
   });
   return newObj;
 };
+
+// @desc      Upload Image
+exports.uploadUserImage = upload.single('avatar');
+
+// @desc      Upload mutil Image
+exports.uploadProductImage = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 6 },
+
+  //upload.single('image') req.file
+  //upload.array('image',3) req.files
+]);
+
+// @desc      Setting User Image
+exports.settingUserImage = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  if (req.params.id) iduser = req.params.id;
+
+  req.file.filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+
+  // Resize ảnh và dung lương ảnh
+  // Dùng await vì sharp trả ra 1 promise nên có thể chậm
+  await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`src/public/img/users/${req.file.filename}`);
+  next();
+});
+
+// @desc      Setting Product Image
+exports.settingProductImages = catchAsync(async (req, res, next) => {
+  if (!req.files.imageCover) return next();
+
+  const idProduct = req.params.id || req.user.id;
+  // 1) IMAGE COVER
+  // Gán giá trị cho req.body.imageCover để dùng lưu ra các router sau
+  req.body.imageCover = `product-${idProduct}-${Date.now()}-cover.jpeg`;
+
+  // Settings ảnh và dung lương ảnh
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1333)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`src/public/img/products/${req.body.imageCover}`);
+
+  // 2) IMAGES
+  if (!req.files.images) return next();
+
+  req.body.images = [];
+
+  // Nên sử dụng map vì map có giá trị trả ra nên sử dụng được Promise.all
+  // Tất cả hàm đều là Bất đồng bộ nên dùng Promise.all để chờ hoàn thành 1 lượt
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const filename = `product-${idProduct}-${Date.now()}-${i + 1}.jpeg`;
+      await sharp(file.buffer)
+        .resize(2000, 1333)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`src/public/img/products/${filename}`);
+
+      // Đảy từng phần từ vào mảng rỗng ở trên
+      req.body.images.push(filename);
+    })
+  );
+  next();
+});
