@@ -1,4 +1,6 @@
 const Product = require('./../models/productModel');
+const Order = require('./../models/oderModel');
+const User = require('./../models/userModel');
 
 const ErrorResponse = require('./../utils/errorResponse');
 const catchAsync = require('../middlewares/catchAsync');
@@ -109,5 +111,58 @@ exports.deleteProduct = catchAsync(async (req, res, next) => {
 
   res.status(204).json({
     success: true,
+  });
+});
+
+// @desc      Get All Product
+// @route     GET /api/v1/products/:day
+// @access    Private -- admin
+exports.getProductSold = catchAsync(async (req, res, next) => {
+  const day = new Date();
+  day.setDate(day.getDate() - req.params.day);
+
+  const product = await Order.aggregate([
+    {
+      $match: {
+        orderStatus: { $in: ['Delivered', 'Shipped', 'Prepare goods'] },
+        createdAt: {
+          $lte: new Date(),
+          $gte: day,
+        },
+      },
+    },
+    { $unwind: '$orderItems' },
+    {
+      $group: {
+        _id: '$orderItems.product',
+        totalSold: { $sum: '$orderItems.quantity' },
+      },
+    },
+    {
+      // Nên nhớ collection from: 'products' thêm s ở sau
+      $lookup: {
+        from: 'products',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'product',
+      },
+    },
+    {
+      // Giới hạn field trả ra 1 là có 0 là không hiện
+      $project: {
+        'product.name': 1,
+        'product.price': 1,
+        'product.imageCover': 1,
+        'product.category': 1,
+        'product.stock': 1,
+        totalSold: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    success: true,
+    result: product.length,
+    data: product,
   });
 });

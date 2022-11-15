@@ -75,13 +75,20 @@ exports.getOrder = catchAsync(async (req, res, next) => {
 // @route     GET /api/v1/orders/
 // @access    Private -- Admin
 exports.getAllOrder = catchAsync(async (req, res, next) => {
-  const order = await Order.find();
+  const features = new ApiFeatures(Order.find(), req.query)
+    .search()
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+
+  const order = await features.query;
 
   let totalAmout = 0;
 
   // Lấy ra tất cả đơn order và giá tiền
   order.forEach((itemOrder) => {
-    totalAmout += order.totalPrice;
+    totalAmout += itemOrder.totalPrice;
   });
 
   res.status(200).json({
@@ -96,6 +103,11 @@ exports.getAllOrder = catchAsync(async (req, res, next) => {
 // @access    Private -- Admin
 exports.updateOrder = catchAsync(async (req, res, next) => {
   const order = await Order.findById(req.params.id);
+
+  const input = ['Prepare goods', 'Shipped', 'Shipped fail', 'Delivered'];
+  if (!input.find((item) => item === req.body.status)) {
+    return next(new ErrorResponse(`Status order illegal`, 404));
+  }
 
   if (!order) {
     return next(

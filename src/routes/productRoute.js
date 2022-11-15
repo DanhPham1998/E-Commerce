@@ -16,6 +16,8 @@ const reviewRoute = require('./../routes/reviewRoute');
 router.use('/:productId/reviews', reviewRoute);
 
 // Router
+router.route('/get-product-sold/:day').get(productController.getProductSold);
+
 router
   .route('/')
   .get(productController.getAllProduct)
