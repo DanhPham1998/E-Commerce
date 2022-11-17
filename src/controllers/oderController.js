@@ -44,49 +44,6 @@ exports.newOrder = catchAsync(async (req, res, next) => {
   });
 });
 
-// @desc      Add Coupon Order
-// @route     PUT /api/v1/orders/:id/addcoupon/
-// @access    Private -- Admin
-exports.addCouponOrder = catchAsync(async (req, res, next) => {
-  // Check exist order
-  let order = await Order.findById(req.params.id);
-  if (!order) {
-    return next(
-      new ErrorResponse(`No Order found with ID:${req.params.id}`, 404)
-    );
-  }
-
-  // Check coupon exist
-  const coupon = await Coupon.findOne({
-    codeCoupon: req.body.codecoupon,
-    startDate: { $lte: new Date() },
-    endDate: { $gte: new Date() },
-  });
-  if (!coupon) {
-    return next(
-      new ErrorResponse(`Coupon ${req.body.codeCoupon} exist or expired`, 404)
-    );
-  }
-
-  if (req.user.couponUse.includes(coupon)) {
-    return next(
-      new ErrorResponse(`You has been counpon ${req.body.codeCoupon}`, 404)
-    );
-  }
-  console.log(coupon);
-
-  // Update order with coupon
-  order.coupon = coupon._id;
-  await order.save();
-
-  //
-
-  res.status(200).json({
-    status: 'success',
-    data: order,
-  });
-});
-
 // @desc      Get A Order Me
 // @route     GET /api/v1/orders/
 // @access    Private
