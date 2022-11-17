@@ -25,7 +25,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Giai ma token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  //console.log(decoded);
+  console.log('QuaDay', decoded);
 
   const currentUser = await User.findById(decoded.id);
   //Check account exist

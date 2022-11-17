@@ -17,4 +17,6 @@ router
   .put(orderController.updateOrder)
   .delete(orderController.deleteOrder);
 
+router.route('/:id/addcoupon').put(protect, orderController.addCouponOrder);
+
 module.exports = router;

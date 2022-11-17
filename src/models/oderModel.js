@@ -99,7 +99,10 @@ const orderSchema = new mongoose.Schema({
     required: true,
     default: 'Processing',
   },
-
+  coupon: {
+    type: mongoose.Schema.ObjectId,
+    ref: 'Coupon',
+  },
   deliveredAt: Date,
   createdAt: {
     type: Date,

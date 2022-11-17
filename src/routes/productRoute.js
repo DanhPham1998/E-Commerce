@@ -16,7 +16,9 @@ const reviewRoute = require('./../routes/reviewRoute');
 router.use('/:productId/reviews', reviewRoute);
 
 // Router
-router.route('/get-product-sold/:day').get(productController.getProductSold);
+router
+  .route('/get-product-sold/:day')
+  .get(protect, authorize('admin'), productController.getProductSold);
 
 router
   .route('/')
@@ -39,6 +41,6 @@ router
     settingProductImages,
     productController.updateProduct
   )
-  .delete(protect, productController.deleteProduct);
+  .delete(protect, authorize('admin'), productController.deleteProduct);
 
 module.exports = router;
