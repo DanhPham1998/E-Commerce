@@ -33,20 +33,32 @@ const userSchema = new mongoose.Schema({
     maxlength: [40, 'A password  must have more or equal then 40 characters'],
     select: false,
   },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please comfirm your password'],
-    validate: {
-      // Nên nhớ chỉ hoạt động với lệnh CREATE và SAVE!!!
-      validator: function (el) {
-        return el === this.password;
-      },
-      message: 'Password are not the same',
-    },
+  // passwordConfirm: {
+  //   type: String,
+  //   required: [true, 'Please comfirm your password'],
+  //   validate: {
+  //     // Nên nhớ chỉ hoạt động với lệnh CREATE và SAVE!!!
+
+  //     validator: function (el) {
+  //       return el === this.password;
+  //     },
+  //     message: 'Password are not the same',
+  //   },
+  // },
+  verifyEmai: {
+    type: Boolean,
+    default: false,
   },
-  couponUse: [String],
+  couponUse: [
+    {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Coupon',
+    },
+  ],
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  verifyEmailToken: String,
+  verifyEmailExpire: Date,
   changePasswordAt: Date,
   createAt: {
     type: Date,
@@ -59,6 +71,7 @@ userSchema.pre('save', async function (next) {
   // Bỏ qua nếu password không thay đổi
   if (!this.isModified('password')) return next();
 
+  console.log('khong co');
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 
@@ -72,6 +85,7 @@ userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) {
     return next();
   }
+  console.log('khong co');
   this.changePasswordAt = Date.now() - 1000; // Trừ 1000 ms để tránh login lỗi
   next();
 });
@@ -95,7 +109,7 @@ userSchema.methods.getResetPasswordToken = function () {
   // Generate token
   const resetToken = crypto.randomBytes(20).toString('hex');
 
-  console.log('Reset Token: ', resetToken);
+  //console.log('Reset Token: ', resetToken);
 
   // Hash resettoken and set resetPasswordToken field
   this.resetPasswordToken = crypto
@@ -118,6 +132,24 @@ userSchema.methods.checkChangePassword = function (JwtTimeStamp) {
     return JwtTimeStamp < timestampChangePW;
   }
   return false;
+};
+
+// Generate and verify email token
+userSchema.methods.getEmailVerifyToken = function () {
+  // Generate token
+  const emailToken = crypto.randomBytes(20).toString('hex');
+
+  //console.log('Reset Token: ', resetToken);
+
+  // Hash resettoken and set resetPasswordToken field
+  this.verifyEmailToken = crypto
+    .createHash('sha256')
+    .update(emailToken)
+    .digest('hex');
+
+  // Set exprire 10 minite
+  this.verifyEmailExpire = Date.now() + 10 * 60 * 1000;
+  return emailToken;
 };
 
 const User = mongoose.model('User', userSchema);

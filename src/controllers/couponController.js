@@ -112,7 +112,7 @@ exports.checkCoupon = catchAsync(async (req, res, next) => {
   }
 
   // Check user is use this coupon
-  if (req.user.couponUse.includes(coupon._id)) {
+  if (req.user.couponUse.coupon.includes(coupon._id)) {
     return next(
       new ErrorResponse(`You has been counpon ${req.query.codecoupon}`, 404)
     );

@@ -12,14 +12,20 @@ const { sendTokenResponse } = require('./../utils/sendTokenResponse');
 exports.register = catchAsync(async (req, res, next) => {
   const { name, email, password, passwordConfirm } = req.body;
 
+  if (password !== passwordConfirm) {
+    return next(new ErrorResponse(`Password are not the same`, 401));
+  }
   // Create User
   const user = await User.create({
     name,
     email,
     password,
-    passwordConfirm,
   });
 
+  const url = `${req.protocol}://${req.get('host')}/me`;
+  console.log(url);
+
+  await new Email(user, url).sendWelcome();
   // Create Token
   sendTokenResponse(user, 201, res);
 });
@@ -100,7 +106,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       data: 'Email send',
     });
   } catch (err) {
-    console.log(err);
+    //console.log(err);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
@@ -131,13 +137,104 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     return next(new ErrorResponse('Invalid resetToken', 400));
   }
 
+  if (req.body.password !== req.body.passwordConfirm) {
+    return next(new ErrorResponse(`Password are not the same`, 401));
+  }
+
   // Set new password and xoa 2 cai resettoken va resetExpire
   user.password = req.body.password;
-  user.passwordConfirm = req.body.passwordConfirm;
   user.resetPasswordToken = undefined;
   user.resetPasswordExpire = undefined;
   await user.save();
 
   // Create Token
   sendTokenResponse(user, 200, res);
+});
+
+// @desc      Send Verify Email
+// @route     POST /api/v1/auth/veifyemail
+// @access    Private
+exports.sendVerifyEmail = catchAsync(async (req, res, next) => {
+  const user = await User.findOne({ email: req.user.email });
+
+  if (!user) {
+    return next(
+      new ErrorResponse(`Email ${req.user.email} does not exist`, 401)
+    );
+  }
+
+  // Generate and hash resetPasswordToken
+  const verifyToken = user.getEmailVerifyToken();
+
+  // Save resetoken and tokenExpire DB
+  await user.save({ validateBeforeSave: false });
+
+  // Create reset URL
+  const url = `${req.protocol}://${req.get('host')}/api/v1/auth/verify/${
+    req.user.id
+  }/${verifyToken}`;
+
+  // Send Mail
+  try {
+    await new Email(user, url).sendVerifyEmail();
+
+    res.status(200).json({
+      status: 200,
+      data: 'An Email sent to your account please verify',
+    });
+  } catch (err) {
+    //console.log(err);
+    user.verifyEmailToken = undefined;
+    user.verifyEmailExpire = undefined;
+
+    await user.save({ validateBeforeSave: false });
+
+    return next(new ErrorResponse('Email could not be send', 500));
+  }
+});
+
+// @desc      Verify Email
+// @route     GET /api/v1/auth/verify/:iduser/:verifytoken
+// @access    Public
+exports.verifyEmail = catchAsync(async (req, res, next) => {
+  // Get hased Token
+  const verifyToken = crypto
+    .createHash('sha256')
+    .update(req.params.verifytoken)
+    .digest('hex');
+
+  const idUser = req.params.iduser;
+  // Get User with resettoken
+  const user = await User.findOne({
+    _id: idUser,
+    verifyEmailToken: verifyToken,
+    verifyEmailExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new ErrorResponse('No found with verify email token', 400));
+  }
+
+  // Set verifyEmai = true, remove verifyEmailToken and verifyEmailExpire
+
+  user.verifyEmai = true;
+  user.verifyEmailToken = undefined;
+  user.verifyEmailExpire = undefined;
+  await user.save();
+  // await User.updateOne(
+  //   { _id: idUser },
+  //   {
+  //     $set: {
+  //       verifyEmai: true,
+  //       verifyEmailToken: undefined,
+  //       verifyEmailExpire: undefined,
+  //     },
+  //   },
+  //   { runValidators: false }
+  // );
+
+  res.status(200).json({
+    success: true,
+    data: 'Email verified sucessfully',
+  });
 });

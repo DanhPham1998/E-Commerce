@@ -36,7 +36,11 @@ exports.newOrder = catchAsync(async (req, res, next) => {
   });
   // Update coupon user use
   if (coupon)
-    await User.findByIdAndUpdate(req.user.id, { $push: { couponUse: coupon } });
+    await User.findByIdAndUpdate(req.user.id, {
+      $push: {
+        couponUse: coupon,
+      },
+    });
 
   res.status(200).json({
     status: 'success',

@@ -64,8 +64,11 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     return next(new ErrorResponse('Curent password is not correct', 401));
   }
 
+  if (password !== passwordConfirm) {
+    return next(new ErrorResponse(`Password are not the same`, 401));
+  }
+
   user.password = password;
-  user.passwordConfirm = passwordConfirm;
   await user.save();
 
   sendTokenResponse(user, 201, res);
@@ -77,12 +80,15 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
 exports.createUser = catchAsync(async (req, res, next) => {
   const { name, email, password, passwordConfirm } = req.body;
 
+  if (password !== passwordConfirm) {
+    return next(new ErrorResponse(`Password are not the same`, 401));
+  }
+
   // Create User
   const newuser = await User.create({
     name,
     email,
     password,
-    passwordConfirm,
   });
 
   res.status(201).json({

@@ -25,9 +25,12 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Giai ma token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-  console.log('QuaDay', decoded);
 
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).populate({
+    path: 'couponUse',
+    select: 'codeCoupon discount -_id',
+  });
+  console.log(currentUser);
   //Check account exist
   if (!currentUser) {
     return next(new ErrorResponse('Your account not exist', 401));
