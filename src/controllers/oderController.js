@@ -1,50 +1,77 @@
 const Product = require('./../models/productModel');
 const Order = require('./../models/oderModel');
 const Coupon = require('./../models/couponModel');
+const Cart = require('./../models/cartModel');
 
 const ErrorResponse = require('./../utils/errorResponse');
 const catchAsync = require('../middlewares/catchAsync');
 const ApiFeatures = require('./../utils/apiFeatures');
 const User = require('../models/userModel');
 
-// @desc      Create New Order
+// @desc      Create Order
 // @route     POST /api/v1/orders/
 // @access    Private
-exports.newOrder = catchAsync(async (req, res, next) => {
-  const {
-    shippingInfo,
-    orderItems,
-    paymentInfo,
-    itemsPrice,
-    taxPrice,
-    shippingPrice,
-    totalPrice,
-    coupon,
-  } = req.body;
+exports.createOrder = catchAsync(async (req, res, next) => {
+  const user = req.user.id;
+  const { shippingInfo, paymentMethods, shippingPrice, coupon } = req.body;
 
-  const order = await Order.create({
-    shippingInfo,
-    orderItems,
-    paymentInfo,
-    itemsPrice,
-    taxPrice,
-    shippingPrice,
-    totalPrice,
-    paidAt: Date.now(),
-    coupon,
-    user: req.user._id,
-  });
-  // Update coupon user use
-  if (coupon)
-    await User.findByIdAndUpdate(req.user.id, {
-      $push: {
-        couponUse: coupon,
-      },
+  const cart = await Cart.findOne({ userId: user })
+    .select('-items._id')
+    .populate({
+      path: 'items.productId',
+      select: 'stock _id',
     });
+
+  if (!cart && cart.totalPrice == 0) {
+    return next(new ErrorResponse(`No cart found account`, 404));
+  }
+
+  const productStock = cart.items.filter((item) => {
+    return item.productId.stock < item.quantity;
+  });
+
+  console.log(productStock);
+
+  // Check trong kho còn đủ hàng không
+  if (productStock.length > 0) {
+    const productStockNot = productStock.map((item) => {
+      return (
+        item.name + ' Only ' + item.productId.stock + ' products left in stock'
+      );
+    });
+
+    return next(
+      new ErrorResponse(
+        `Not enough products : ${productStockNot.join(', ')}`,
+        404
+      )
+    );
+  }
+
+  //Get coupon discount
+  let discount = 0;
+  if (coupon) {
+    const getcoupon = await Coupon.findById(coupon);
+    discount = getcoupon.discount;
+  }
+
+  // Create order
+  const neworder = await Order.create({
+    user,
+    shippingInfo,
+    paymentMethods,
+    shippingPrice,
+    itemsPrice: cart.totalPrice,
+    coupon,
+    orderItems: cart.items,
+    bill: cart.totalPrice + shippingPrice - discount,
+  });
+
+  await cart.remove();
 
   res.status(200).json({
     status: 'success',
-    data: order,
+    data: neworder,
   });
 });
 

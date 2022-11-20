@@ -7,7 +7,7 @@ const { protect, authorize } = require('./../middlewares/authProtect');
 // Middware Protect
 router.use(protect);
 
-router.route('/').post(orderController.newOrder);
+router.route('/').post(orderController.createOrder);
 router.route('/me').get(orderController.getOrderMe);
 
 router.route('/').get(authorize('admin'), orderController.getAllOrder);

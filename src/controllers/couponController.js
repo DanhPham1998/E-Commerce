@@ -4,7 +4,6 @@ const Coupon = require('./../models/couponModel');
 const ApiFeatures = require('./../utils/apiFeatures');
 const ErrorResponse = require('./../utils/errorResponse');
 const catchAsync = require('../middlewares/catchAsync');
-const { sendTokenResponse } = require('./../utils/sendTokenResponse');
 
 // @desc      Create Coupon
 // @route     POST /api/v1/coupon/

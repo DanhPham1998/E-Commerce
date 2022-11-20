@@ -1,113 +1,111 @@
 const mongoose = require('mongoose');
 
-const orderSchema = new mongoose.Schema({
-  shippingInfo: {
-    address: {
-      type: String,
-      required: true,
+const orderSchema = new mongoose.Schema(
+  {
+    shippingInfo: {
+      address: {
+        type: String,
+        required: true,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+
+      state: {
+        type: String,
+        required: true,
+      },
+
+      phoneNo: {
+        type: Number,
+        required: true,
+      },
     },
-    city: {
-      type: String,
+
+    orderItems: [
+      {
+        productId: {
+          type: mongoose.Schema.ObjectId,
+          ref: 'Product',
+          required: true,
+        },
+        name: String,
+        quantity: {
+          type: Number,
+          required: true,
+          min: 1,
+          default: 1,
+        },
+        price: Number,
+      },
+    ],
+
+    user: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
       required: true,
     },
 
-    state: {
+    paymentMethods: {
       type: String,
-      required: true,
+      required: [true, 'Please add payment methods'],
+      enum: {
+        values: ['cod', 'momo'],
+        message: 'Payment methods is either: cod, momo',
+      },
     },
 
-    phoneNo: {
+    paidAt: {
+      type: Date,
+    },
+
+    itemsPrice: {
       type: Number,
       required: true,
+      default: 0,
     },
-  },
 
-  orderItems: [
-    {
-      name: {
-        type: String,
-        required: true,
-      },
-      price: {
-        type: Number,
-        required: true,
-      },
-      quantity: {
-        type: Number,
-        required: true,
-      },
-      image: {
-        type: String,
-        required: true,
-      },
-      product: {
-        type: mongoose.Schema.ObjectId,
-        ref: 'Product',
-        required: true,
-      },
+    shippingPrice: {
+      type: Number,
+      required: true,
+      default: 0,
     },
-  ],
 
-  user: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+    bill: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
 
-  paymentInfo: {
-    id: {
+    orderStatus: {
       type: String,
       required: true,
+      default: 'Processing',
     },
-    status: {
-      type: String,
-      required: true,
+    coupon: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Coupon',
+    },
+    deliveredAt: Date,
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
+  {
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
 
-  paidAt: {
-    type: Date,
-    required: true,
-  },
+orderSchema.pre('save', function (next) {
+  this.populate({
+    path: 'coupon',
+    select: 'codeCoupon discount',
+  });
 
-  itemsPrice: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-
-  taxPrice: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-
-  shippingPrice: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-
-  totalPrice: {
-    type: Number,
-    required: true,
-    default: 0,
-  },
-
-  orderStatus: {
-    type: String,
-    required: true,
-    default: 'Processing',
-  },
-  coupon: {
-    type: mongoose.Schema.ObjectId,
-    ref: 'Coupon',
-  },
-  deliveredAt: Date,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+  next();
 });
 
 const Order = mongoose.model('Order', orderSchema);
