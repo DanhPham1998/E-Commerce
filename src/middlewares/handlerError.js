@@ -12,7 +12,7 @@ module.exports = (err, req, res, next) => {
     let error = JSON.parse(JSON.stringify(err));
 
     error.message = err.message;
-    console.log(error.name);
+
     //console.log(error); // err.name, error.message, err.stack, err.code
 
     // Mongoose bad ObjectId DB (Id invalid )
@@ -28,7 +28,6 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'JsonWebTokenError')
       error = handleJsonWebTokenError(error);
 
-    console.log(error.message);
     sendErrorProd(error, req, res);
   }
 };

@@ -30,7 +30,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     path: 'couponUse',
     select: 'codeCoupon discount -_id',
   });
-  //console.log(currentUser);
+
   //Check account exist
   if (!currentUser) {
     return next(new ErrorResponse('Your account not exist', 401));

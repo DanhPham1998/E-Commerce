@@ -25,7 +25,6 @@ class ApiFeatures {
         }
       : {};
 
-    //console.log(keyword);
     this.query = this.query.find({ ...search });
     return this;
   }

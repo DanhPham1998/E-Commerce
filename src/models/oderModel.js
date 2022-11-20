@@ -108,6 +108,15 @@ orderSchema.pre('save', function (next) {
   next();
 });
 
+orderSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'coupon',
+    select: 'codeCoupon discount',
+  });
+
+  next();
+});
+
 const Order = mongoose.model('Order', orderSchema);
 
 module.exports = Order;

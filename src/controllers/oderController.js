@@ -30,8 +30,6 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     return item.productId.stock < item.quantity;
   });
 
-  console.log(productStock);
-
   // Check trong kho còn đủ hàng không
   if (productStock.length > 0) {
     const productStockNot = productStock.map((item) => {

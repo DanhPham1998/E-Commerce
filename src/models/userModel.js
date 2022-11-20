@@ -71,7 +71,6 @@ userSchema.pre('save', async function (next) {
   // Bỏ qua nếu password không thay đổi
   if (!this.isModified('password')) return next();
 
-  console.log('khong co');
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 
@@ -85,7 +84,7 @@ userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) {
     return next();
   }
-  console.log('khong co');
+
   this.changePasswordAt = Date.now() - 1000; // Trừ 1000 ms để tránh login lỗi
   next();
 });
@@ -108,8 +107,6 @@ userSchema.methods.checkPassword = async function (enterPassword) {
 userSchema.methods.getResetPasswordToken = function () {
   // Generate token
   const resetToken = crypto.randomBytes(20).toString('hex');
-
-  //console.log('Reset Token: ', resetToken);
 
   // Hash resettoken and set resetPasswordToken field
   this.resetPasswordToken = crypto
@@ -138,8 +135,6 @@ userSchema.methods.checkChangePassword = function (JwtTimeStamp) {
 userSchema.methods.getEmailVerifyToken = function () {
   // Generate token
   const emailToken = crypto.randomBytes(20).toString('hex');
-
-  //console.log('Reset Token: ', resetToken);
 
   // Hash resettoken and set resetPasswordToken field
   this.verifyEmailToken = crypto

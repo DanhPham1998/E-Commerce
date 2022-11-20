@@ -23,7 +23,6 @@ exports.createProduct = catchAsync(async (req, res, next) => {
 // @route     GET /api/v1/products
 // @access    Public
 exports.getAllProduct = catchAsync(async (req, res, next) => {
-  console.log(req.query);
   const features = new ApiFeatures(Product.find(), req.query)
     .search()
     .filter()

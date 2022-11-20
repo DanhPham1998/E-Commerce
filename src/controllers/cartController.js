@@ -118,7 +118,7 @@ exports.updateCart = catchAsync(async (req, res, next) => {
 exports.deleteProductCart = catchAsync(async (req, res, next) => {
   const userId = req.user.id;
   const productId = req.query.productId;
-  console.log(productId);
+
   let cart = await Cart.findOne({ userId });
 
   if (cart) {

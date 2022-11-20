@@ -55,8 +55,6 @@ reviewSchema.statics.getAverageRating = async function (pruductId) {
     },
   ]);
 
-  //console.log('Math', obj);
-
   // [ { _id: new ObjectId("636f1a8972bf49178b5c3fc6"), averageRating: 8.5 } ]
   // Check nếu không có giá trị để đặc mặc định averageRating = 10, numOfReviews =0
   if (obj.length > 0) {

@@ -101,8 +101,6 @@ exports.createUser = catchAsync(async (req, res, next) => {
 // @route     GET /api/v1/users/
 // @access    Private -- Admin
 exports.getAllUser = catchAsync(async (req, res, next) => {
-  console.log(req.query);
-
   const features = new ApiFeatures(User.find(), req.query)
     .search()
     .filter()

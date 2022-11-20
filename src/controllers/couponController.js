@@ -117,7 +117,6 @@ exports.checkCoupon = catchAsync(async (req, res, next) => {
     );
   }
 
-  console.log(req.query.codecoupon);
   res.status(200).json({
     success: true,
     data: coupon,

@@ -23,7 +23,6 @@ exports.register = catchAsync(async (req, res, next) => {
   });
 
   const url = `${req.protocol}://${req.get('host')}/me`;
-  console.log(url);
 
   await new Email(user, url).sendWelcome();
   // Create Token
@@ -106,7 +105,6 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
       data: 'Email send',
     });
   } catch (err) {
-    //console.log(err);
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
@@ -126,7 +124,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     .update(req.params.resettoken)
     .digest('hex');
 
-  console.log(resetPasswordToken);
   // Get User with resettoken
   const user = await User.findOne({
     resetPasswordToken: resetPasswordToken,
@@ -183,7 +180,6 @@ exports.sendVerifyEmail = catchAsync(async (req, res, next) => {
       data: 'An Email sent to your account please verify',
     });
   } catch (err) {
-    //console.log(err);
     user.verifyEmailToken = undefined;
     user.verifyEmailExpire = undefined;
 
