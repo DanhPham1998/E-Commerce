@@ -133,7 +133,7 @@ exports.getProductSold = catchAsync(async (req, res, next) => {
     { $unwind: '$orderItems' },
     {
       $group: {
-        _id: '$orderItems.product',
+        _id: '$orderItems.productId',
         totalSold: { $sum: '$orderItems.quantity' },
       },
     },

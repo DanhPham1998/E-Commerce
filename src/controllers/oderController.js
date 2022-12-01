@@ -22,8 +22,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       select: 'stock _id',
     });
 
-  if (!cart && cart.totalPrice == 0) {
-    return next(new ErrorResponse(`No cart found account`, 404));
+  if (!cart || cart.totalPrice == 0) {
+    return next(new ErrorResponse(`No product in cart found account`, 404));
   }
 
   const productStock = cart.items.filter((item) => {
@@ -166,7 +166,7 @@ exports.updateOrder = catchAsync(async (req, res, next) => {
   // Update lại đơn hàng trong kho khi chuẩn bị hàng
   if (req.body.status === 'Prepare goods') {
     order.orderItems.forEach(async (itemOrder) => {
-      await updateStock(itemOrder.product, itemOrder.quantity, true);
+      await updateStock(itemOrder.productId, itemOrder.quantity, true);
     });
   }
 
@@ -178,7 +178,7 @@ exports.updateOrder = catchAsync(async (req, res, next) => {
   // Update lại hàng trong kho khi giao hàng thất bại
   if (req.body.status === 'Shipped fail') {
     order.orderItems.forEach(async (itemOrder) => {
-      await updateStock(itemOrder.product, itemOrder.quantity, false);
+      await updateStock(itemOrder.productId, itemOrder.quantity, false);
     });
   }
 
